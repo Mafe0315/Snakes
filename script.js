@@ -1,6 +1,9 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+const scoreDisplay = document.getElementById("score");
+const timerDisplay = document.getElementById("timer");
+
 const box = 20;
 let snake = [{ x: 9 * box, y: 10 * box }];
 let food = {
@@ -9,21 +12,41 @@ let food = {
 };
 let score = 0;
 let direction;
+let gameStarted = false;
+let startTime;
+let timerInterval;
+
+// Load sounds
+const eatSound = new Audio("sounds/eat.mp3");
+const gameOverSound = new Audio("sounds/gameover.mp3");
 
 document.addEventListener("keydown", (e) => {
+  if (!gameStarted) {
+    gameStarted = true;
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
   if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
   if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
   if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
   if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
 });
 
+function updateTimer() {
+  const seconds = Math.floor((Date.now() - startTime) / 1000);
+  timerDisplay.textContent = `Time: ${seconds}s`;
+}
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Draw snake
   for (let i = 0; i < snake.length; i++) {
-    ctx.fillStyle = i === 0 ? "lime" : "white";
-    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+    ctx.fillStyle = i === 0 ? "lime" : "white"; // Snake head
+    ctx.beginPath();
+    ctx.rect(snake[i].x, snake[i].y, box, box);
+    ctx.fill();
     ctx.strokeStyle = "#000";
     ctx.strokeRect(snake[i].x, snake[i].y, box, box);
   }
@@ -43,6 +66,7 @@ function draw() {
 
   if (headX === food.x && headY === food.y) {
     score++;
+    eatSound.play();
     food = {
       x: Math.floor(Math.random() * 19 + 1) * box,
       y: Math.floor(Math.random() * 19 + 1) * box
@@ -55,14 +79,19 @@ function draw() {
 
   // Game over conditions
   if (
-    headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height ||
-    snake.some((seg) => seg.x === newHead.x && seg.y === newHead.y)
+    headX < 0 || headX >= canvas.width ||
+    headY < 0 || headY >= canvas.height ||
+    snake.some(seg => seg.x === newHead.x && seg.y === newHead.y)
   ) {
     clearInterval(game);
-    alert("Game Over! Score: " + score);
+    clearInterval(timerInterval);
+    gameOverSound.play();
+    alert("Game Over! Your score is " + score);
+    return;
   }
 
   snake.unshift(newHead);
+  scoreDisplay.textContent = `Score: ${score}`;
 }
 
 let game = setInterval(draw, 100);
