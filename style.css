@@ -10,6 +10,14 @@ h1 {
 
 canvas {
   background-color: #222;
-  margin-top: 10px;
   border: 4px solid #333;
+  margin-top: 10px;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  font-size: 18px;
+  color: #333;
 }
